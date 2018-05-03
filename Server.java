@@ -20,12 +20,12 @@ public class Server{
 		ServerSocket serverSocket;
 		Socket clientSocket;
 		boolean connect = false, ready = false;
-		int port = -1, numGuessesAllowed, numIncorrectGuesses;
+		int port = -1, numGuessesAllowed=1, numIncorrectGuesses=0;
 		ServerHangmanGUI serverGui = new ServerHangmanGUI();
 		PrintWriter writeToClient; //write a message to client, instantiate when connection is confirmed
 		BufferedReader readFromClient;	//read message from client, instant. when connect confirmed
 		String inputString, outputString; //hold contents from and to client
-		String secretWord;
+		String secretWord, guess;
 		char[] currentWord;
 		Scanner userInput = new Scanner(System.in);
 
@@ -142,12 +142,109 @@ public class Server{
 			 *numIncorrectGuesses = numAllowedGuesses or user has successfully guessed
 			 *the word.
 			 */
+			boolean winner = false;
+			while((numIncorrectGuesses != numGuessesAllowed) && !winner){
 
 
+				while(true){
+					if((inputString = readFromClient.readLine()) != null){
+						break;
+					}
+				}
+				System.out.println("Client has guessed: " + inputString);
+				boolean match = false;
+				guess = inputString.substring(5);
+				if(guess.length() == 1){
+					//guess is a letter
+					System.out.println("Client guessed letter: " + guess);
+					for(int i = 0; i < secretWord.length(); i++){
+						//compare letter to each letter of secret word
+						if(guess.charAt(0) == secretWord.charAt(i)){
+							//match found, update currentWord[]
+							currentWord[i] = guess.charAt(0);
+							System.out.println("Found a match in secret word at index: " + i);
+							match = true;
+						}
+					}
+					//write back to client, if match found, send "r" and secretword, else send "w"
+					if(match){
+						//match was found, send "r" and secret word
+						currentWordStr = new String(currentWord);
+						System.out.println("Status of word is: " + currentWordStr);
+						outputString = message.formatMessage("s","r".concat(currentWordStr));
+						writeToClient.println(outputString); //send word to client
+						//check status of currentWord[] to see if all letters have been guessed
+						int count = 0;
+						for(int i = 0; i < secretWord.length(); i++){
+							//check for a '-'
+							if(currentWord[i] == '-'){
+								match = false; //match remains false
+							}
+							else{
+								count++;
+							}
+						}
+						if(count == secretWord.length()){
+							//all letters were accounted for in currentWord
+							winner = true;
+						}
 
+					}
+					else{
+						//match not found
+						outputString = message.formatMessage("s","w");
+						writeToClient.println(outputString);
+						numIncorrectGuesses++;
+					}
+				}
+				else{
+					//guess is a word
+					int countMatch = 0;
+					match = false;
+					System.out.println("Client guessed word: " + guess);
+					if(guess.length() < secretWord.length() || guess.length()>secretWord.length()){
+						//incorrect word. guess is shorter than secret word
+						match = false;
+					}
+					else{
+						for(int i = 0; i < secretWord.length(); i++){
+							//compare letter to each letter of secret word
+							if(guess.charAt(i) == secretWord.charAt(i)){
+								//match found, update currentWord[]
+								//currentWord[i] = guess.charAt(0);
+								System.out.println("Found a match in secret word at index: " + i);
+								//match = true;
+								countMatch++; //count number of correct letters
+							}
+							else{
+								match = false;
+							}
+						}
+					}
 
+					//write back to client, if match found, send "r" and secretword, else send "w"
+					if(countMatch == secretWord.length()){
+						//match was found, send "r" and secret word
+						//player has won game
+						outputString = message.formatMessage("s","r".concat(secretWord));
+						writeToClient.println(outputString); //send word to client
+						winner = true;
+					}
+					else{
+						//match not found
+						outputString = message.formatMessage("s","w");
+						writeToClient.println(outputString);
+						numIncorrectGuesses++;
+					}
+
+				}
+
+			}
 			//*****Fourth step: Play again or end/close connection*****
-
+			if(numIncorrectGuesses == numGuessesAllowed){
+				System.out.println("Player has lost");
+				System.exit(0);
+			}
 
 
 		}
