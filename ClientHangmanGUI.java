@@ -16,7 +16,7 @@ public class ClientHangmanGUI{
 	private JPanel panelOne, panelTwo;
 	private JLabel statusLabel, labelOne, labelTwo;
 	private JButton buttonOne;
-	private int portNum, numGuessesLeft=6;
+	private int portNum, numGuessesLeft = 1;
 	private String ipAddress, letterGuess="", wordGuess="", gameStatus, secretWord="";
 	private boolean connect, ready, guess; //tells when client is connected,ready,guessed
 
@@ -25,6 +25,7 @@ public class ClientHangmanGUI{
 		connect = false;
 		ready = false; //initially not ready to play game
 		portNum = -1;
+		gameStatus = "Status: Retrieving update...";
 	}
 
 	//methods
@@ -56,6 +57,14 @@ public class ClientHangmanGUI{
 		 */
 		this.numGuessesLeft = num;
 	}//end setNumGuessesLeft method
+
+	public int getNumGuessesLeft(){
+		return numGuessesLeft;
+	}
+
+	public void setGameStatusLabel(String updateMeSwag420BlazeIt){
+		this.gameStatus = updateMeSwag420BlazeIt;
+	}
 
 	public void setSecretWord(String word){
 		/* Description: Set the current status of secret word player is trying to guess
@@ -234,7 +243,7 @@ public class ClientHangmanGUI{
 
 		//set fonts and sizes for all labels, textFields, and button
 		gameTitleLabel.setFont(new Font("Serif",0,30));
-		secretWordLabel.setFont(new Font("Serif",0,28));
+		secretWordLabel.setFont(new Font("Serif",0,50));
 		gameLabelOne.setFont(new Font("Serif",0,24));
 		gameLabelTwo.setFont(new Font("Serif",0,24));
 		gameLabelThree.setFont(new Font("Serif",0,24));
@@ -318,7 +327,7 @@ public class ClientHangmanGUI{
 		//set ready button action
 		gameUpdateBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				gameStatusLabel.setText("Status: Retrieving game update.");
+				gameStatusLabel.setText(gameStatus);
 				//set number of guesses left and current secret word status
 				numGuessText.setText(Integer.toString(numGuessesLeft));
 				System.out.println("Number of guesses left is: " + numGuessText.getText());
@@ -335,7 +344,7 @@ public class ClientHangmanGUI{
 
 
 //main method for testing purposes of frames
-	public static void main(String[] args){
+	public static void main(String[] args) throws Exception{
 		ClientHangmanGUI client = new ClientHangmanGUI();
 		client.createConnectFrame();
 		client.createReadyFrame();
