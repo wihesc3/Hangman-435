@@ -11,6 +11,7 @@
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 public class Server{
 
@@ -19,11 +20,14 @@ public class Server{
 		ServerSocket serverSocket;
 		Socket clientSocket;
 		boolean connect = false, ready = false;
-		int port = -1;
+		int port = -1, numGuessesAllowed, numIncorrectGuesses;
 		ServerHangmanGUI serverGui = new ServerHangmanGUI();
 		PrintWriter writeToClient; //write a message to client, instantiate when connection is confirmed
 		BufferedReader readFromClient;	//read message from client, instant. when connect confirmed
 		String inputString, outputString; //hold contents from and to client
+		String secretWord;
+		char[] currentWord;
+		Scanner userInput = new Scanner(System.in);
 
 		Message message = new Message();
 		String messageToSend;
@@ -104,15 +108,40 @@ public class Server{
 			}
 			System.out.println("Client says: " + inputString);
 			message.parseMessage("s",inputString);
-			//now need to know if player is ready
-
+			//now need to know if player is ready, wait for client message
+			while(true){
+				if((inputString = readFromClient.readLine()) != null){
+					break;
+				}
+			}
 
 			//receive message stating that client is ready to play
-
-
+			message.parseMessage("s",inputString);
+			System.out.println("Client says: " + inputString);
 
 			//*****Third step: Play game until win/lose status*****
+			System.out.println("Enter secret word: " );
+			secretWord = userInput.nextLine();
+			System.out.println("Secret word is: " + secretWord);
 
+			//initialize char[] to all -- of length of secret word
+			currentWord = new char[secretWord.length()];
+			for(int i = 0; i < currentWord.length; i++){
+				currentWord[i] = '-';
+			}
+
+			//send secret word status to user as well as number of guesses
+			String currentWordStr = new String(currentWord);
+			System.out.println("Status of word is: " + currentWordStr);
+			outputString = message.formatMessage("s",currentWordStr);
+			writeToClient.println(outputString); //send word to client
+
+			/*This is the looping section. Get guess of letter or word from client.
+			 *If inputString is length 4, then guess is a letter, else if guess>4,
+			 *it is a word guess. Continueing receiving guesses until
+			 *numIncorrectGuesses = numAllowedGuesses or user has successfully guessed
+			 *the word.
+			 */
 
 
 

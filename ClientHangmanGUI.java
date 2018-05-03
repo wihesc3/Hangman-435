@@ -16,9 +16,9 @@ public class ClientHangmanGUI{
 	private JPanel panelOne, panelTwo;
 	private JLabel statusLabel, labelOne, labelTwo;
 	private JButton buttonOne;
-	private int portNum;
-	private String ipAddress;
-	private boolean connect, ready;
+	private int portNum, numGuessesLeft=6;
+	private String ipAddress, letterGuess="", wordGuess="", gameStatus, secretWord="";
+	private boolean connect, ready, guess; //tells when client is connected,ready,guessed
 
 	//constructor
 	public ClientHangmanGUI(){
@@ -30,10 +30,12 @@ public class ClientHangmanGUI{
 	//methods
 	public int getPort(){
 		return this.portNum;
-	}
+	}//end getPort method
+
 	public String getAddress(){
 		return this.ipAddress;
-	}
+	}//end getAddress method
+
 	public boolean getConnect(){
 		System.out.println("in getConnect, connect is " + connect);
 		if(portNum != -1){
@@ -42,10 +44,42 @@ public class ClientHangmanGUI{
 		else{
 			return false;
 		}
-	}
+	}//end getConnect method
+
 	public boolean getReady(){
 		return this.ready;
-	}
+	}//end getReady method
+
+	public void setNumGuessesLeft(int num){
+		/* Description: Set the number of guesses user has left
+		 *
+		 */
+		this.numGuessesLeft = num;
+	}//end setNumGuessesLeft method
+
+	public void setSecretWord(String word){
+		/* Description: Set the current status of secret word player is trying to guess
+		 */
+		 this.secretWord = word;
+	}//end setSecretWord method
+
+	public String getLetterGuess(){
+		return this.letterGuess;
+	}//end getLetterGuess method
+
+	public void resetGuess(){
+		/*	Description: After client has requested current guess,
+		 *	current guess is reset to empty string to prevent redundancy
+		 */
+		 this.letterGuess = "";
+		 this.wordGuess = "";
+	}//end resetGuess method
+
+
+	public String getWordGuess(){
+		return this.wordGuess;
+	}//end getWordGuess method
+
 
 	public void createConnectFrame(){
 		/* First step in initiating game play. Establish a connection with a
@@ -159,7 +193,7 @@ public class ClientHangmanGUI{
 		readyFrame.add(panelReadyOne);
 		readyFrame.add(statReadyLabel);
 
-//		mainFrame.setVisible(false);
+		mainFrame.setVisible(false);
 		readyFrame.setVisible(true);
 	}//end createReadyFrame method
 
@@ -171,7 +205,132 @@ public class ClientHangmanGUI{
 		 */
 
 		gameFrame = new JFrame("Hangman Game");
+		gameFrame.setLayout(new GridLayout(7,1));
+		gameFrame.setSize(500,400);
+		JPanel gamePanelOne = new JPanel();
+		JPanel gamePanelTwo = new JPanel();
+		JPanel gamePanelThree = new JPanel();
+		JPanel gamePanelFive = new JPanel();
+		JPanel gamePanelSix = new JPanel();
+		JPanel gamePanelSeven = new JPanel();
+		gamePanelOne.setLayout(new GridLayout(1,2));
+		gamePanelTwo.setLayout(new GridLayout(1,2));
+		gamePanelThree.setLayout(new GridLayout(1,2));
+		gamePanelFive.setLayout(new FlowLayout());
+		gamePanelSix.setLayout(new FlowLayout());
+		gamePanelSeven.setLayout(new FlowLayout());
 
+		JLabel gameTitleLabel = new JLabel("Hangman Game", JLabel.CENTER);
+		JLabel secretWordLabel = new JLabel("Word goes here",JLabel.CENTER);
+		JLabel gameLabelOne = new JLabel("Number of guesses left: ", JLabel.RIGHT);
+		JLabel gameLabelTwo = new JLabel("Guess a letter: " , JLabel.RIGHT);
+		JLabel gameLabelThree = new JLabel("or guess the word: " ,JLabel.RIGHT);
+		JTextField numGuessText = new JTextField(4);
+		JTextField guessLetterText = new JTextField(4);
+		JTextField guessWordText = new JTextField(6);
+		JButton gameEnterBtn = new JButton("Enter Guess");
+		JButton gameUpdateBtn = new JButton("Update");
+		JLabel gameStatusLabel = new JLabel("Status: ", JLabel.CENTER);
+
+		//set fonts and sizes for all labels, textFields, and button
+		gameTitleLabel.setFont(new Font("Serif",0,30));
+		secretWordLabel.setFont(new Font("Serif",0,28));
+		gameLabelOne.setFont(new Font("Serif",0,24));
+		gameLabelTwo.setFont(new Font("Serif",0,24));
+		gameLabelThree.setFont(new Font("Serif",0,24));
+		guessLetterText.setFont(new Font("Serif",0,24));
+		guessWordText.setFont(new Font("Serif",0,24));
+		gameEnterBtn.setFont(new Font("Serif",0,24));
+		gameUpdateBtn.setFont(new Font("Serif",0,24));
+		gameStatusLabel.setFont(new Font("Serif",0,18));
+		numGuessText.setEditable(false);
+		numGuessText.setFont(new Font("Serif",0,24));
+
+		//add components to panels and frame
+		gamePanelOne.add(gameLabelOne);
+		gamePanelFive.add(numGuessText);
+		gamePanelOne.add(gamePanelFive);
+		gamePanelTwo.add(gameLabelTwo);
+		gamePanelSix.add(guessLetterText);
+		gamePanelTwo.add(gamePanelSix);
+		gamePanelThree.add(gameLabelThree);
+		gamePanelSeven.add(guessWordText);
+		gamePanelThree.add(gamePanelSeven);
+
+		gameFrame.add(gameTitleLabel);
+		gameFrame.add(secretWordLabel);
+		gameFrame.add(gamePanelOne);
+		gameFrame.add(gamePanelTwo);
+		gameFrame.add(gamePanelThree);
+		JPanel gamePanelFour = new JPanel();
+		gamePanelFour.setLayout(new FlowLayout());
+		gamePanelFour.add(gameEnterBtn);
+		gamePanelFour.add(gameUpdateBtn);
+		gameFrame.add(gamePanelFour);
+		gameFrame.add(gameStatusLabel);
+
+		//window closing action
+		gameFrame.addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent windowEvent){
+				System.exit(0);
+			}
+		});
+
+		//button click action
+		gameEnterBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				gameStatusLabel.setText("Status: Retrieving guess from player");
+				//determine if letter or word guess, retrieve both text box entries
+				letterGuess = guessLetterText.getText();
+				wordGuess = guessWordText.getText();
+				System.out.println("Letter is " + letterGuess + " with length " + letterGuess.length());
+				System.out.println("Word is " + wordGuess + " with length " + wordGuess.length());
+				if(letterGuess.length() != 0){
+					//letter was entered as guess
+					if(wordGuess.length() != 0){
+						//user entered both a letter and a word
+						gameStatusLabel.setText("Status: Player can't guess both a letter and word.");
+						//clear both text boxes and guesses
+						guessLetterText.setText("");
+						guessWordText.setText("");
+						letterGuess = "";
+						wordGuess = "";
+					}
+					else{
+						//only a letter was entered
+						gameStatusLabel.setText("Status: Player has guessed a letter. Loading response.");
+						wordGuess = ""; //make sure last word guess is not saved
+					}
+				}
+				else if(wordGuess.length() != 0){
+					//word was entered as guess
+					gameStatusLabel.setText("Status: Player has guessed a word. Loading response.");
+					letterGuess = ""; //make sure last letter guess is not saved
+
+				}
+				else{
+					//did not enter a guess
+					gameStatusLabel.setText("Status: Player must enter a letter OR a word as guess.");
+				}
+			}
+		}); //end gameEnterBtn action
+
+		//set ready button action
+		gameUpdateBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				gameStatusLabel.setText("Status: Retrieving game update.");
+				//set number of guesses left and current secret word status
+				numGuessText.setText(Integer.toString(numGuessesLeft));
+				System.out.println("Number of guesses left is: " + numGuessText.getText());
+				secretWordLabel.setText(secretWord);
+
+			}
+		});
+
+
+		gameFrame.setVisible(true); //make this window visible
+		readyFrame.setVisible(false);//close the other windows
+		mainFrame.setVisible(false);
 	}//end createGameFrame method
 
 
@@ -180,6 +339,7 @@ public class ClientHangmanGUI{
 		ClientHangmanGUI client = new ClientHangmanGUI();
 		client.createConnectFrame();
 		client.createReadyFrame();
-		System.out.println(client.getConnect());
+	//	System.out.println(client.getConnect());
+	client.createGameFrame();
 	}
 }//end class

@@ -141,11 +141,12 @@ public class ServerHangmanGUI{
 		readyFrame.add(panelOne);
 		readyFrame.add(statusLabel);
 
-//		connectFrame.setVisible(false);
+		connectFrame.setVisible(false);
 		readyFrame.setVisible(true);
 	}
 
 	public void createSecretWordFrame(){
+		JFrame wordFrame = new JFrame("Secret Word");
 
 	}
 
